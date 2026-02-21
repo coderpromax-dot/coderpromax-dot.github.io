@@ -1,198 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>command_prompt_1</title>
+<meta charset="UTF-8">
+<title>Arnav Chess Arena</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.js"></script>
+
 <style>
 body {
   margin: 0;
+  background: #111;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+
+#board {
+  width: 500px;
+  margin: 40px auto;
+}
+
+.hack-screen {
   background: black;
   color: #00ff00;
-  font-family: Consolas, monospace;
-  overflow: hidden;
-}
-
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-}
-
-#terminal {
-  position: relative;
-  z-index: 1;
+  height: 100vh;
   padding: 20px;
-  white-space: pre-wrap;
-  font-size: 18px;
-}
-
-.dialog {
-  display: none;
-  position: relative;
-  z-index: 2;
-  width: 500px;
-  background: #111;
-  border: 2px solid #00ff00;
-  margin: 20px;
-  box-shadow: 0 0 15px #00ff00;
-}
-
-.titlebar {
-  background: #222;
-  padding: 6px 10px;
-  display: flex;
-  justify-content: space-between;
-  color: white;
-  font-size: 14px;
-  user-select: none;
-}
-
-.titlebar .buttons span {
-  margin-left: 8px;
-  pointer-events: none;
-}
-
-.dialog-content {
-  padding: 20px;
-  text-align: center;
-  font-size: 18px;
-}
-
-.spinner {
-  border: 4px solid #003300;
-  border-top: 4px solid #00ff00;
-  border-radius: 50%;
-  width: 35px;
-  height: 35px;
-  animation: spin 1s linear infinite;
-  margin: 15px auto;
-}
-
-@keyframes spin {
-  100% { transform: rotate(360deg); }
+  font-family: monospace;
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="matrix"></canvas>
-
-<div id="terminal"></div>
-
-<div class="dialog" id="dialogBox">
-  <div class="titlebar">
-    <div>command_prompt_1</div>
-    <div class="buttons">
-      <span>-</span>
-      <span>✕</span>
-    </div>
-  </div>
-  <div class="dialog-content" id="dialogContent">
-    ACCESS GRANTED
-  </div>
-</div>
+<h1>Arnav Chess Arena ♟️</h1>
+<div id="board"></div>
 
 <script>
-// MATRIX BACKGROUND
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
+var board = null
+var game = new Chess()
 
-const letters = "01";
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = [];
-
-for (let i = 0; i < columns; i++) {
-  drops[i] = 1;
-}
-
-let matrixInterval = setInterval(drawMatrix, 35);
-
-function drawMatrix() {
-  ctx.fillStyle = "rgba(0,0,0,0.05)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#00ff00";
-  ctx.font = fontSize + "px monospace";
-
-  for (let i = 0; i < drops.length; i++) {
-    const text = letters[Math.floor(Math.random() * letters.length)];
-    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-      drops[i] = 0;
-    drops[i]++;
+function onDragStart (source, piece) {
+  if (game.game_over()) return false
+  if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+    return false
   }
 }
 
-// TERMINAL
-const terminal = document.getElementById("terminal");
-const dialog = document.getElementById("dialogBox");
-const dialogContent = document.getElementById("dialogContent");
+function onDrop (source, target) {
+  var move = game.move({
+    from: source,
+    to: target,
+    promotion: 'q'
+  })
+  if (move === null) return 'snapback'
+}
 
-const lines = [
-"C:\\Users\\Target> scan_network.exe",
-"Scanning network ports...",
-"Establishing secure tunnel...",
-"Bypassing firewall protocols...",
-"Extracting device credentials...",
-"Decrypting local registry...",
-"Tracing IP route...",
-"IP LOCATION FOUND: PUNE, MAHARASHTRA"
-];
+var config = {
+  draggable: true,
+  position: 'start',
+  onDragStart: onDragStart,
+  onDrop: onDrop
+}
 
-let i = 0;
+board = Chessboard('board', config)
 
-function typeLine() {
-  if (i < lines.length) {
-    terminal.innerHTML += lines[i] + "\n\n";
-    i++;
-    setTimeout(typeLine, 4000);
-  } else {
-    setTimeout(showDialog, 5000);
+/* SECRET HACK MODE */
+document.addEventListener("keydown", function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "H") {
+    activateHackMode();
   }
+});
+
+function activateHackMode() {
+  document.body.innerHTML = `
+  <div class="hack-screen">
+    <h2>DEVELOPER ACCESS INITIATED...</h2>
+    <p id="hackText"></p>
+  </div>
+  `;
+
+  let messages = [
+    "Scanning board engine...",
+    "Injecting override protocol...",
+    "Bypassing security layers...",
+    "Binary stream initiated...",
+    "ROOT ACCESS GRANTED",
+    "SUCCESSFUL! FILES COPIED"
+  ];
+
+  let i = 0;
+  let interval = setInterval(() => {
+    if (i < messages.length) {
+      document.getElementById("hackText").innerHTML += messages[i] + "<br>";
+      i++;
+    } else {
+      clearInterval(interval);
+      setTimeout(() => {
+        document.body.style.background = "black";
+        document.body.innerHTML = "";
+      }, 2000);
+    }
+  }, 1200);
 }
 
-function showDialog() {
-  dialog.style.display = "block";
-
-  setTimeout(() => {
-    let percent = 0;
-
-    dialogContent.innerHTML = `
-      <div class="spinner"></div>
-      <div id="copyText">Copying files... 0%</div>
-    `;
-
-    const copyText = document.getElementById("copyText");
-
-    const interval = setInterval(() => {
-      percent += Math.floor(Math.random() * 7) + 3;
-      if (percent >= 100) {
-        percent = 100;
-        clearInterval(interval);
-
-        setTimeout(() => {
-          dialogContent.innerHTML = "SUCCESSFUL! FILES COPIED";
-
-          // STOP MATRIX
-          clearInterval(matrixInterval);
-
-          // BLACKOUT after 4 seconds
-          setTimeout(() => {
-            document.body.innerHTML = "";
-            document.body.style.background = "black";
-          }, 4000);
-
-        }, 2000);
-      }
-      copyText.innerText = "Copying files... " + percent + "%";
-    }, 1200);
-
-  }, 8000);
+/* SERVICE WORKER */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
-
-typeLine();
 </script>
 
 </body>
